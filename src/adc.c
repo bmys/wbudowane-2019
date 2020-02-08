@@ -77,33 +77,6 @@ void startConversion()
     }
 }
 
-float temperatureInterpolation(float resistance, int interval)
-{
-    static short tempSpread;
-
-    if (interval == TAB_SIZE - 1) {
-        return 150.0f;
-    } else if (interval == 0) {
-        return -55.0f;
-    } else {
-        tempSpread = TEMP_SENSOR_TAB[interval + 1][0] - TEMP_SENSOR_TAB[interval][0];
-    }
-    float rest = resistance - TEMP_SENSOR_TAB[interval][2];
-    float result = TEMP_SENSOR_TAB[interval + 1][2] - TEMP_SENSOR_TAB[interval][2];
-    float ratio = rest / result;
-    return TEMP_SENSOR_TAB[interval][0] + (float)tempSpread * ratio;
-}
-
-float resistanceToCelcius(float resistance)
-{
-    // Find resistance interval
-    int interval = 0;
-    for (; interval < TAB_SIZE; interval++)
-        if (resistance < TEMP_SENSOR_TAB[interval][2])
-            break;
-    return temperatureInterpolation(resistance, interval - 1);
-}
-
 static inline void printResistance(char* buffer, unsigned int resistance, uint8_t line)
 {
     snprintf(buffer, 11, "R: %u", resistance);
@@ -154,7 +127,7 @@ void printADC()
         printResistance(buffer, termistorResistance, 2);
         printVolt(buffer, CALCULATE_ADC_VOLTAGE(ADC_AVG_VALUE), 3);
         printAdc(buffer, ADC_AVG_VALUE, 4);
-        printTemp(buffer, resistanceToCelcius(termistorResistance), 5);
+        printTemp(buffer, calculateTemperature(termistorResistance), 5);
     }
 }
 
