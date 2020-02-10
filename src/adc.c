@@ -14,18 +14,12 @@ static inline void adcCalibrate()
 void adcInit()
 {
     LL_ADC_Disable(ADC1);
-    LL_ADC_InitTypeDef adcInit = { .Resolution = LL_ADC_RESOLUTION_12B,
-                                   .DataAlignment = LL_ADC_DATA_ALIGN_RIGHT,
-                                   .LowPowerMode = LL_ADC_LP_MODE_NONE };
-
-    if (!LL_ADC_Init(ADC1, &adcInit)) {
-        //    ERROR HANDLING
-    }
-
+    
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_ADC12);
-
     LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_CLOCK_SYNC_PCLK_DIV2);
 
+    LL_ADC_SetResolution(ADC1, LL_ADC_RESOLUTION_12B);
+    LL_ADC_SetDataAlignment(ADC1, LL_ADC_DATA_ALIGN_RIGHT);
     LL_ADC_SetCommonPathInternalCh(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_PATH_INTERNAL_NONE);
 
     LL_ADC_REG_SetSequencerLength(ADC1, LL_ADC_REG_SEQ_SCAN_DISABLE);
