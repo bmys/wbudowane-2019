@@ -2,14 +2,6 @@
 
 short ADC_AVG_VALUE = -1;
 
-static inline void adcCalibrate()
-{
-    LL_ADC_EnableInternalRegulator(ADC1);
-    delay(LL_ADC_DELAY_INTERNAL_REGUL_STAB_US);
-    LL_ADC_StartCalibration(ADC1, LL_ADC_DIFFERENTIAL_ENDED);
-    while (LL_ADC_IsCalibrationOnGoing(ADC1))
-        ;
-}
 
 void adcInit()
 {
@@ -27,9 +19,9 @@ void adcInit()
 
     LL_ADC_SetResolution(ADC1, LL_ADC_RESOLUTION_12B);
     LL_ADC_SetDataAlignment(ADC1, LL_ADC_DATA_ALIGN_RIGHT);
-
-    adcCalibrate();
-
+    
+    LL_ADC_EnableIT_EOS(ADC1);
+    
     LL_ADC_Enable(ADC1);
     while (!LL_ADC_IsActiveFlag_ADRDY(ADC1))
         ;
@@ -38,7 +30,7 @@ void adcInit()
         //    ERROR HANDLING
     }
 
-    LL_ADC_EnableIT_EOS(ADC1);
+    
     NVIC_EnableIRQ(ADC1_IRQn);
 }
 
