@@ -25,12 +25,7 @@ void adcInit()
     LL_ADC_Enable(ADC1);
     while (!LL_ADC_IsActiveFlag_ADRDY(ADC1))
         ;
-
-    if (!LL_ADC_IsEnabled(ADC1)) {
-        //    ERROR HANDLING
-    }
-
-    
+   
     NVIC_EnableIRQ(ADC1_IRQn);
 }
 
