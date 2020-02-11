@@ -70,6 +70,7 @@ char* getDate()
 
 void setTime(int hours, int minutes, int seconds)
 {
+    LL_PWR_EnableBkUpAccess();
     LL_RTC_DisableWriteProtection(RTC);
     LL_RTC_EnterInitMode(RTC);
     LL_RTC_TimeTypeDef initTime = { .TimeFormat = LL_RTC_HOURFORMAT_24HOUR,
@@ -80,10 +81,12 @@ void setTime(int hours, int minutes, int seconds)
     LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BIN, &initTime);
     LL_RTC_ExitInitMode(RTC);
     LL_RTC_EnableWriteProtection(RTC);
+    LL_PWR_DisableBkUpAccess();
 }
 
 void setDate(uint8_t weekDay, int days, int months, int years)
 {
+    LL_PWR_EnableBkUpAccess();
     LL_RTC_DisableWriteProtection(RTC);
     LL_RTC_EnterInitMode(RTC);
     
@@ -94,6 +97,8 @@ void setDate(uint8_t weekDay, int days, int months, int years)
     LL_RTC_DATE_Init(RTC, LL_RTC_FORMAT_BIN, &initDate);
     LL_RTC_ExitInitMode(RTC);
     LL_RTC_EnableWriteProtection(RTC);
+    LL_PWR_DisableBkUpAccess();
+
 }
 
 void setOneSecondAlarm()
