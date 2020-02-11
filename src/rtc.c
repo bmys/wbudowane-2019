@@ -17,9 +17,8 @@ void rtcInit()
 
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
     LL_PWR_EnableBkUpAccess();
-
     LL_RCC_SetRTCClockSource(LL_RCC_RTC_CLKSOURCE_HSE_DIV32);
-
+   
 
     LL_RCC_EnableRTC();
 
@@ -31,9 +30,8 @@ void rtcInit()
     LL_RTC_SetSynchPrescaler(RTC, RTC_SYNCH_PREDIV_HSE);
 
     LL_RTC_ExitInitMode(RTC);
+    LL_RTC_EnableWriteProtection(RTC);
     LL_PWR_DisableBkUpAccess();
-    
-
 }
 
 char* getTime()
@@ -72,21 +70,30 @@ char* getDate()
 
 void setTime(int hours, int minutes, int seconds)
 {
+    LL_RTC_DisableWriteProtection(RTC);
+    LL_RTC_EnterInitMode(RTC);
     LL_RTC_TimeTypeDef initTime = { .TimeFormat = LL_RTC_HOURFORMAT_24HOUR,
                                     .Hours = hours,
                                     .Minutes = minutes,
                                     .Seconds = seconds };
 
     LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BIN, &initTime);
+    LL_RTC_ExitInitMode(RTC);
+    LL_RTC_EnableWriteProtection(RTC);
 }
 
 void setDate(uint8_t weekDay, int days, int months, int years)
 {
+    LL_RTC_DisableWriteProtection(RTC);
+    LL_RTC_EnterInitMode(RTC);
+    
     LL_RTC_DateTypeDef initDate = {
         .WeekDay = weekDay, .Month = months, .Day = days, .Year = years
     };
 
     LL_RTC_DATE_Init(RTC, LL_RTC_FORMAT_BIN, &initDate);
+    LL_RTC_ExitInitMode(RTC);
+    LL_RTC_EnableWriteProtection(RTC);
 }
 
 void setOneSecondAlarm()
