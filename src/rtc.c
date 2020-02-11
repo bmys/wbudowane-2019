@@ -20,6 +20,7 @@ void rtcInit()
 
     LL_RCC_SetRTCClockSource(LL_RCC_RTC_CLKSOURCE_HSE_DIV32);
 
+
     LL_RCC_EnableRTC();
 
     LL_RTC_DisableWriteProtection(RTC);
@@ -30,6 +31,9 @@ void rtcInit()
     LL_RTC_SetSynchPrescaler(RTC, RTC_SYNCH_PREDIV_HSE);
 
     LL_RTC_ExitInitMode(RTC);
+    LL_PWR_DisableBkUpAccess();
+    
+
 }
 
 char* getTime()
@@ -87,6 +91,7 @@ void setDate(uint8_t weekDay, int days, int months, int years)
 
 void setOneSecondAlarm()
 {
+    LL_PWR_EnableBkUpAccess();
     LL_RTC_ALMA_Disable(RTC);
 
     while (!LL_RTC_IsActiveFlag_ALRAW(RTC))
@@ -96,10 +101,13 @@ void setOneSecondAlarm()
     LL_RTC_ALMA_Init(RTC, LL_RTC_HOURFORMAT_24HOUR, &secondsAlarm);
     LL_RTC_DisableWriteProtection(RTC);
     LL_RTC_ALMA_Enable(RTC);
+    
+    LL_PWR_DisableBkUpAccess();
 }
 
 void enableAlarmAInterrupt()
 {
+    LL_PWR_EnableBkUpAccess();
     LL_RTC_EnableIT_ALRA(RTC);
 
     LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_17);
@@ -107,10 +115,12 @@ void enableAlarmAInterrupt()
 
     NVIC_SetPriority(RTC_Alarm_IRQn, 0x0F);
     NVIC_EnableIRQ(RTC_Alarm_IRQn);
+    LL_PWR_DisableBkUpAccess();
 }
 
 void RTC_Alarm_IRQHandler(void)
 {
+    LL_PWR_EnableBkUpAccess();
     static char dateTimeBuffer[20] = {};
 
     if (LL_EXTI_IsEnabledIT_0_31(LL_EXTI_LINE_17)) {
@@ -126,4 +136,5 @@ void RTC_Alarm_IRQHandler(void)
         printADC();
         TRACE_DEBUG("Date %s, Time: %s", date, time);
     }
+    LL_PWR_DisableBkUpAccess();
 }
