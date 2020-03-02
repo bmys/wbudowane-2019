@@ -2,43 +2,26 @@
 
 short ADC_AVG_VALUE = -1;
 
-static inline void adcCalibrate()
-{
-    LL_ADC_EnableInternalRegulator(ADC1);
-    delay(LL_ADC_DELAY_INTERNAL_REGUL_STAB_US);
-    LL_ADC_StartCalibration(ADC1, LL_ADC_DIFFERENTIAL_ENDED);
-    while (LL_ADC_IsCalibrationOnGoing(ADC1))
-        ;
-}
 
 void adcInit()
 {
     LL_ADC_Disable(ADC1);
-    LL_ADC_InitTypeDef adcInit = { .Resolution = LL_ADC_RESOLUTION_12B,
-                                   .DataAlignment = LL_ADC_DATA_ALIGN_RIGHT,
-                                   .LowPowerMode = LL_ADC_LP_MODE_NONE };
-
-    if (!LL_ADC_Init(ADC1, &adcInit)) {
-        //    ERROR HANDLING
-    }
-
+    
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_ADC12);
-
     LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_CLOCK_SYNC_PCLK_DIV2);
-
-    LL_ADC_SetCommonPathInternalCh(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_PATH_INTERNAL_NONE);
+   
+    LL_ADC_REG_SetContinuousMode(ADC1, LL_ADC_REG_CONV_CONTINUOUS);
 
     LL_ADC_REG_SetSequencerLength(ADC1, LL_ADC_REG_SEQ_SCAN_DISABLE);
     LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_8);
+
+    LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_8, LL_ADC_SAMPLINGTIME_601CYCLES_5);
+
+    LL_ADC_SetResolution(ADC1, LL_ADC_RESOLUTION_12B);
+    LL_ADC_SetDataAlignment(ADC1, LL_ADC_DATA_ALIGN_RIGHT);
     
-    LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_8, LL_ADC_SAMPLINGTIME_181CYCLES_5);
-    LL_ADC_REG_SetTriggerSource(ADC1, LL_ADC_REG_TRIG_SOFTWARE);
-    LL_ADC_REG_SetContinuousMode(ADC1, LL_ADC_REG_CONV_CONTINUOUS);
-    LL_ADC_REG_SetDMATransfer(ADC1, LL_ADC_REG_DMA_TRANSFER_NONE);
-    LL_ADC_REG_SetOverrun(ADC1, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
-
-    adcCalibrate();
-
+    LL_ADC_EnableIT_EOS(ADC1);
+    
     LL_ADC_Enable(ADC1);
     while (!LL_ADC_IsActiveFlag_ADRDY(ADC1))
         ;
@@ -47,7 +30,7 @@ void adcInit()
         //    ERROR HANDLING
     }
 
-    LL_ADC_EnableIT_EOS(ADC1);
+    
     NVIC_EnableIRQ(ADC1_IRQn);
 }
 
@@ -75,33 +58,6 @@ void startConversion()
     } else {
         //    ERROR HANDLING
     }
-}
-
-float temperatureInterpolation(float resistance, int interval)
-{
-    static short tempSpread;
-
-    if (interval == TAB_SIZE - 1) {
-        return 150.0f;
-    } else if (interval == 0) {
-        return -55.0f;
-    } else {
-        tempSpread = TEMP_SENSOR_TAB[interval + 1][0] - TEMP_SENSOR_TAB[interval][0];
-    }
-    float rest = resistance - TEMP_SENSOR_TAB[interval][2];
-    float result = TEMP_SENSOR_TAB[interval + 1][2] - TEMP_SENSOR_TAB[interval][2];
-    float ratio = rest / result;
-    return TEMP_SENSOR_TAB[interval][0] + (float)tempSpread * ratio;
-}
-
-float resistanceToCelcius(float resistance)
-{
-    // Find resistance interval
-    int interval = 0;
-    for (; interval < TAB_SIZE; interval++)
-        if (resistance < TEMP_SENSOR_TAB[interval][2])
-            break;
-    return temperatureInterpolation(resistance, interval - 1);
 }
 
 static inline void printResistance(char* buffer, unsigned int resistance, uint8_t line)
@@ -154,7 +110,7 @@ void printADC()
         printResistance(buffer, termistorResistance, 2);
         printVolt(buffer, CALCULATE_ADC_VOLTAGE(ADC_AVG_VALUE), 3);
         printAdc(buffer, ADC_AVG_VALUE, 4);
-        printTemp(buffer, resistanceToCelcius(termistorResistance), 5);
+        printTemp(buffer, calculateTemperature(termistorResistance), 5);
     }
 }
 
